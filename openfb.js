@@ -107,7 +107,20 @@ var openFB = (function () {
                     loginWindow.close();
                 }, timeout > 0 ? timeout : 0);
                 oauthCallback(url);
+            }else if (url.indexOf('http://closeinapp') >= 0){
+                loginWindow.close();
             }
+        }
+
+        function loginWindow_loadStopHandler(event) {
+            loginWindow.insertCSS({
+                code: '.customMenu{position:fixed;top:0px;left:0px;z-index:999999;background-color:#EE5E1D;text-align:right;width:100%;height:40px;}.customMenu__close{font-size:15px;color:#000 !important;text-decoration:none;font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-weight:bold;margin-right:10px;margin-top:10px;display:inline-block;}'
+            }, function() {
+            });
+            loginWindow.executeScript({
+                code: 'var div = document.createElement("div");div.innerHTML = "<a class=\'customMenu__close\' href=\'http://closeinapp\'>X</a>";div.className = "customMenu";document.body.appendChild(div);'
+            }, function() {
+            });
         }
 
         // Inappbrowser exit handler: Used when running in Cordova only
@@ -135,12 +148,14 @@ var openFB = (function () {
         }
 
         startTime = new Date().getTime();
+
         loginWindow = window.open(FB_LOGIN_URL + '?client_id=' + fbAppId + '&redirect_uri=' + oauthRedirectURL +
             '&response_type=token&scope=' + scope, '_blank', 'location=no,toolbar=no');
 
         // If the app is running in Cordova, listen to URL changes in the InAppBrowser until we get a URL with an access_token or an error
         if (runningInCordova) {
             loginWindow.addEventListener('loadstart', loginWindow_loadStartHandler);
+            loginWindow.addEventListener('loadstop', loginWindow_loadStopHandler);
             loginWindow.addEventListener('exit', loginWindow_exitHandler);
         }
         // Note: if the app is running in the browser the loginWindow dialog will call back by invoking the
